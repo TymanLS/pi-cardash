@@ -87,8 +87,7 @@ $ sudo rfcomm connect /dev/rfcomm0 <MAC address of OBDII adapter>
 Raw serial data can then be read and written to the device using a serial communication program like `minicom`.
 
 #### Automatically bind on startup
-RFCOMM bindings are not persistent between restarts of the Raspberry Pi. In order to automatically bind the OBDII adapter to the virtual serial device upon startup, create a systemd service unit to run the `rfcomm bind` command after Bluetooth services have started. 
-**TODO: Provide a sample systemd service unit file will be provided**
+RFCOMM bindings are not persistent between restarts of the Raspberry Pi. In order to automatically bind the OBDII adapter to the virtual serial device upon startup, a systemd service unit can be used to run the `rfcomm bind` command after Bluetooth services have started. The provided `obdbind.service` file in [this directory](obdbind/) is a simple implementation of this.
 
 #### Deprecation of `rfcomm` tool
 The `rfcomm` utility used to create a virtual serial device has been deprecated by BlueZ (official Linux Bluetooth stack). However no upstream replacement utilities provide the same functionality as `rfcomm`, so this setup requires the usage of this outdated tool until a proper replacement is provided.

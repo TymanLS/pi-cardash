@@ -1,0 +1,21 @@
+[Unit]
+Description=Bind the specified OBDII bluetooth adapter to the specified rfcomm device file
+Documentation=man:rfcomm(1)
+Requires=bluetooth.service
+After=bluetooth.service
+
+[Service]
+Environment="OBD_RFCOMM_DEV=/dev/rfcomm0"
+Environment="OBD_MAC_ADDR=11:22:33:44:55:66"
+#Environment="OBD_RFCOMM_CHANNEL=1"
+Type=oneshot
+ExecStart=/usr/bin/rfcomm bind $OBD_RFCOMM_DEV $OBD_MAC_ADDR $OBD_RFCOMM_CHANNEL
+ExecStop=/usr/bin/rfcomm release $OBD_RFCOMM_DEV
+RemainAfterExit=yes
+NotifyAccess=main
+#WatchdogSec=10
+#Restart=on-failure
+LimitNPROC=1
+
+[Install]
+WantedBy=bluetooth.target
