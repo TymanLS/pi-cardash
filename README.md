@@ -35,19 +35,37 @@ The OBDII adapter must first be paired with the Raspberry Pi to enable the prope
 
 On the Raspberry Pi, make sure the Bluetooth adapter is not blocked by `rfkill`
 
-```bash
+```
 $ rfkill list
-$ rfkill unblock <id> # if it is blocked
+1: hci0: Bluetooth
+        Soft blocked: no
+        Hard blocked: no
 ```
 
-Then, enable Bluetooth and pair the OBDII adapter with `bluetoothctl`. The adapter may need to be plugged in to a vehicle in order to power on and pair.
+If it is blocked, unblock it.
 
-```bash
+```
+$ rfkill unblock bluetooth
+```
+
+Then, enable Bluetooth and attempt to scan for the OBDII adapter with `bluetoothctl`. The adapter may need to be plugged into a vehicle in order to be powered and discoverable.
+
+```
 $ sudo bluetoothctl
 [bluetooth]# power on
 [bluetooth]# agent on
 [bluetooth]# default-agent
-[bluetooth]# scan on # take note of the MAC address of the Bluetooth OBDII adapter, should be in the form 11:22:33:44:55:66
+[bluetooth]# scan on 
+```
+
+Take note of the MAC address of the Bluetooth OBDII adapter. It should be in the form `xx:xx:xx:xx:xx:xx`.
+
+```
+[NEW] Device 11:22:33:44:55:66 OBDII Adapter
+```
+Once the MAC address is known, stop scanning and pair with the adapter.
+
+```
 [bluetooth]# scan off
 [bluetooth]# pair <MAC address of OBDII adapter>
 [bluetooth]# trust <MAC address of OBDII adapter>
@@ -55,23 +73,23 @@ $ sudo bluetoothctl
 
 If the pairing process succeeded, the adapter should appear in `bluetoothctl`.
 
-```bash
+```
 [bluetooth]# paired-devices
-Device 11:22:33:44:55:66 OBDII Adapter # or something similar
+Device 11:22:33:44:55:66 OBDII Adapter
 ```
 
 ### Setting up RFCOMM Device
 After the Bluetooth OBDII adapter is paired, it must be connected as a serial device through RFCOMM.
 
-Ensure that the OBDII adapter is not connected through a normal Bluetooth profile.
+Ensure that the OBDII adapter is not connected through a normal Bluetooth profile, since this may interfere with connection through RFCOMM.
 
-```bash
+```
 [bluetooth]# disconnect <MAC address of OBDII adapter>
 ```
 
 Then, bind the OBDII adapter as an RFCOMM device.
 
-```bash
+```
 $ sudo rfcomm bind /dev/rfcomm0 <MAC address of OBDII adapter>
 ```
 
@@ -80,7 +98,7 @@ This will create a virtual serial device at `/dev/rfcomm0` on channel 1 (default
 #### Manual serial connection
 When the device is bound, a connection will be attempted when a device tries to open the virtual serial device. It is also possible to manually connect to the device without binding to see if a connection can be properly established, or for troubleshooting purposes.
 
-```bash
+```
 $ sudo rfcomm connect /dev/rfcomm0 <MAC address of OBDII adapter>
 ```
 
@@ -96,14 +114,14 @@ The `rfcomm` utility used to create a virtual serial device has been deprecated 
 ## Usage
 Running the program will automatically connect to the a serial device and attempt to connect to it as an OBDII adapter.
 
-```bash
+```
 $ ./car_stat.py
 ```
 
 If the serial device for the OBDII adapter is known, it can be specified as an argument.
 
-```bash
-$ ./car_stat.py /dev/rfcomm0 # in the case of the Bluetooth adapter
+```
+$ ./car_stat.py /dev/rfcomm0
 ```
 
 If synchronous querying is desired, launch the synchronous version of the program instead.
