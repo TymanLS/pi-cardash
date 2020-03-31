@@ -19,7 +19,7 @@ fi
 
 # Check if a valid MAC address is given when installing
 if [ "$uninstall" = false ]; then
-	if  (echo "$2" | grep -Eq '^([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$'); then
+	if (echo "$2" | grep -Eq '^([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$'); then
 		btadapter=$2
 	else
 		echo "Invalid MAC address"
