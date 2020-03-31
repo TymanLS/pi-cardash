@@ -19,7 +19,7 @@ fi
 
 # Check if a valid MAC address is given when installing
 if [ "$uninstall" = false ]; then
-	if [[ "$2" =~ ^([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$ ]]; then
+	if  (echo "$2" | grep -Eq '^([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$'); then
 		btadapter=$2
 	else
 		echo "Invalid MAC address"
@@ -29,8 +29,8 @@ if [ "$uninstall" = false ]; then
 fi
 
 ### Check if running with sudo
-if [ "$EUID" -ne 0 ]
-	then echo "Must be run as root to install obdbind.service, exiting..."
+if [ "$(id -u)" != "0" ]; then
+	echo "Must be run as root to install obdbind.service, exiting..."
 	exit 1
 fi
 
@@ -38,7 +38,7 @@ fi
 if [ "$uninstall" = true ]; then
 	### Uninstalling obdbind.service
 	# Check whether obdbind exists on the system
-	if !(systemctl list-units --full --all | grep -Fq 'obdbind.service'); then
+	if ! (systemctl list-units --full --all | grep -Fq 'obdbind.service'); then
 		echo "obdbind is not installed"
 		exit 0
 	fi
