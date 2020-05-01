@@ -20,13 +20,14 @@ from pygame.locals import MOUSEBUTTONUP
 ### Import project modules
 import gui
 #TODO: import carstat
-#TODO: import dashcam
+import dashcam
 #TODO: import gps
 
 ### Initialize pygame
 pygame.init()
 screen = pygame.display.set_mode(gui.SCREEN_SIZE)
 #pygame.mouse.set_visible(False)
+
 
 
 #######################
@@ -39,30 +40,29 @@ screen = pygame.display.set_mode(gui.SCREEN_SIZE)
 menuRect = (0, 0, gui.SCREEN_WIDTH, 40)
 
 # Tabs
-status = gui.TouchButton("Status", width=gui.SCREEN_WIDTH//4 - 2, height=40, color=gui.colors.BEIGE)
-gps = gui.TouchButton("GPS", width=gui.SCREEN_WIDTH//4 - 2, height=40, color=gui.colors.BEIGE)
-dashcam = gui.TouchButton("Dashcam", width=gui.SCREEN_WIDTH//4 - 1, height=40, color=gui.colors.BEIGE)
-clock = gui.TextBox("Clock", width=gui.SCREEN_WIDTH//4 - 2, height=40)
-menuTabs = [status, gps, dashcam, clock]
+status_tab = gui.TouchButton("Status", width=gui.SCREEN_WIDTH//4 - 2, height=40, color=gui.colors.BEIGE)
+gps_tab = gui.TouchButton("GPS", width=gui.SCREEN_WIDTH//4 - 2, height=40, color=gui.colors.BEIGE)
+dashcam_tab = gui.TouchButton("Dashcam", width=gui.SCREEN_WIDTH//4 - 1, height=40, color=gui.colors.BEIGE)
+clock_tab = gui.TextBox("Clock", width=gui.SCREEN_WIDTH//4 - 2, height=40)
+menuTabs = [status_tab, gps_tab, dashcam_tab, clock_tab]
 
 # Tab coordinates
 menuCoords = [(0, 0), (gui.SCREEN_WIDTH//4, 0), (gui.SCREEN_WIDTH//2, 0), (3*gui.SCREEN_WIDTH//4 + 2, 0)]
 
 # Buttons (used for event handling)
-menuButtons = [status, gps, dashcam]
+menuButtons = [status_tab, gps_tab, dashcam_tab]
 
 
 ### Status Tab
 
 # Gauges
-rpm = gui.RpmGauge(redline=6000)
-coolant_temp = gui.BarGauge("Coolant Temperature", unit="degC", val_range=(-10, 120), safe_range=(10,85))
-maf = gui.BarGauge("Mass Airflow Intake", unit="g/s", safe_range=(0, 600))
-statusGauges = [rpm, coolant_temp, maf]
+rpm_gauge = gui.RpmGauge(redline=6000)
+coolant_temp_gauge = gui.BarGauge("Coolant Temperature", unit="degC", val_range=(-10, 120), safe_range=(10,85))
+maf_gauge = gui.BarGauge("Mass Airflow Intake", unit="g/s", safe_range=(0, 600))
+statusGauges = [rpm_gauge, coolant_temp_gauge, maf_gauge]
 
 # Gauge Coordinates
 statusCoords = [(512, 300), (200, 300), (824, 300)]
-
 
 
 ### GPS Tab
@@ -70,6 +70,9 @@ statusCoords = [(512, 300), (200, 300), (824, 300)]
 
 ### Dashcam Tab
 
+# Camera
+cam = dashcam.Dashcam()
+camCoords = (0, 120)
 
 ### Quit Button
 quit_button = gui.TouchButton("Quit")
@@ -82,7 +85,7 @@ quit_button = gui.TouchButton("Quit")
 
 count = 0
 start_time = time.time()
-currentTab = status
+currentTab = status_tab
 
 try:
 	while time.time() - start_time < timeout:
@@ -96,14 +99,18 @@ try:
 					if tab.pressed(pos):
 						print(f"Switching to {tab.text} tab")
 						currentTab = tab
+						if tab is dashcam_tab:
+							cam.show(camCoords[0], camCoords[1])
+						else:
+							cam.hide()
 				if quit_button.pressed(pos):
 					pygame.quit()
 					exit()
 
 		# Update values
-		rpm.update(count)
-		coolant_temp.update(int(count/50))
-		maf.update(count)
+		rpm_gauge.update(count)
+		coolant_temp_gauge.update(int(count/50))
+		maf_gauge.update(count)
 		count+=1
 
 		### Redraw screen
@@ -116,16 +123,16 @@ try:
 			menuTabs[tab].draw(screen, menuCoords[tab][0], menuCoords[tab][1], centered=False)
 
 		# Draw Status tab
-		if currentTab is status:
+		if currentTab is status_tab:
 			for gauge in range(0, len(statusGauges)):
 				statusGauges[gauge].draw(screen, statusCoords[gauge][0], statusCoords[gauge][1])
 
 		# Draw GPS tab
-		elif currentTab is gps:
+		elif currentTab is gps_tab:
 			pass
 
 		# Draw Dashcam tab
-		elif currentTab is dashcam:
+		elif currentTab is dashcam_tab:
 			pass
 
 		# Draw quit button
