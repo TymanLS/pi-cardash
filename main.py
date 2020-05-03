@@ -19,7 +19,7 @@ from pygame.locals import MOUSEBUTTONUP
 
 ### Import project modules
 import gui
-#TODO: import carstat
+import carstat
 #TODO: import dashcam
 #TODO: import gps
 
@@ -63,7 +63,10 @@ statusGauges = [rpm, coolant_temp, maf]
 # Gauge Coordinates
 statusCoords = [(512, 300), (200, 300), (824, 300)]
 
-
+# CarStat
+obdCommands = {carstat.commands.RPM, carstat.commands.COOLANT_TEMP, carstat.commands.MAF}
+car = carstat.CarStat(obdCommands)
+car.start()
 
 ### GPS Tab
 
@@ -97,13 +100,14 @@ try:
 						print(f"Switching to {tab.text} tab")
 						currentTab = tab
 				if quit_button.pressed(pos):
+					car.stop()
 					pygame.quit()
 					exit()
 
 		# Update values
-		rpm.update(count)
-		coolant_temp.update(int(count/50))
-		maf.update(count)
+		rpm.update(car.query(carstat.commands.RPM))
+		coolant_temp.update(car.query(carstat.commands.COOLANT_TEMP))
+		maf.update(car.query(carstat.commands.MAF))
 		count+=1
 
 		### Redraw screen
@@ -135,5 +139,6 @@ try:
 		pygame.display.flip()
 		
 except KeyboardInterrupt:
+	car.stop
 	pygame.quit()
 	exit()

@@ -18,7 +18,7 @@ commands = obd.commands
 class CarStat:
 	def __init__(self, commands:set, portstr:str=None):
 		self.__connection = obd.Async(portstr) # connect to the specified serial device
-		if not is_connected(self):
+		if not self.__connection.is_connected():
 			# Not connected
 			raise Exception
 
@@ -33,18 +33,26 @@ class CarStat:
 
 		for cmd in self.__cmd_set:
 			print(f"Watching {cmd.name}")
-			connection.watch(cmd)
+			self.__connection.watch(cmd)
 
+	def start():
 		self.__connection.start()
 
-	def is_connected(self)
+	def stop():
+		self.__connection.stop()
+
+	def is_connected(self):
 		return self.__connection.is_connected()
 
 	def query(self, command, unit:str=None):
-		if unit:
-			return self.__connection.query(command).to(unit)
+		quantity = self.__connection.query(command).value
+		if not quantity:
+			return 0
+		elif unit:
+			return quantity.to(unit).magnitude
 		else:
-			return self.__connection.query(command)
-		
+			return quantity.magnitude
+
 	def __del__(self):
+		self.__connection.stop()
 		self.__connection.close()
