@@ -35,10 +35,10 @@ class CarStat:
 			print(f"Watching {cmd.name}")
 			self.__connection.watch(cmd)
 
-	def start():
+	def start(self):
 		self.__connection.start()
 
-	def stop():
+	def stop(self):
 		self.__connection.stop()
 
 	def is_connected(self):

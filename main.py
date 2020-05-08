@@ -57,7 +57,7 @@ menuButtons = [status, gps, dashcam]
 # Gauges
 rpm = gui.RpmGauge(redline=6000)
 coolant_temp = gui.BarGauge("Coolant Temperature", unit="degC", val_range=(-10, 120), safe_range=(10,85))
-maf = gui.BarGauge("Mass Airflow Intake", unit="g/s", safe_range=(0, 600))
+maf = gui.BarGauge("Mass Airflow Intake", unit="g/s", val_range=(0,20), safe_range=(0, 10))
 statusGauges = [rpm, coolant_temp, maf]
 
 # Gauge Coordinates
