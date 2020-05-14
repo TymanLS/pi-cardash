@@ -19,7 +19,7 @@ from pygame.locals import MOUSEBUTTONUP
 
 ### Import project modules
 import gui
-import carstat
+#import carstat
 import dashcam
 import gps
 
@@ -65,9 +65,9 @@ statusGauges = [rpm_gauge, coolant_temp_gauge, maf_gauge]
 statusCoords = [(512, 300), (200, 300), (824, 300)]
 
 # CarStat
-obdCommands = {carstat.commands.RPM, carstat.commands.COOLANT_TEMP, carstat.commands.MAF}
-car = carstat.CarStat(obdCommands)
-car.start()
+#obdCommands = {carstat.commands.RPM, carstat.commands.COOLANT_TEMP, carstat.commands.MAF}
+#car = carstat.CarStat(obdCommands)
+#car.start()
 
 
 ### GPS Tab
@@ -99,6 +99,7 @@ quit_button = gui.TouchButton("Quit")
 # Animation Loop #
 ##################
 
+recording = False
 count = 0
 start_time = time.time()
 currentTab = status_tab
@@ -138,7 +139,7 @@ try:
                                 if quit_button.pressed(pos):
                                     if recording:
                                         cam.stop()
-                                    car.stop()
+                                    #car.stop()
                                     pygame.quit()
                                     exit()
 
@@ -146,6 +147,7 @@ try:
                 rpm_gauge.update(count)
                 coolant_temp_gauge.update(int(count/50))
                 maf_gauge.update(count)
+                lat, lon = gps.get_lat_lon()
                 count+=1
 
                 ### Redraw screen
@@ -184,6 +186,6 @@ try:
                 pygame.display.flip()
                 
 except KeyboardInterrupt:
-        car.stop()
+        #car.stop()
         pygame.quit()
         exit()
