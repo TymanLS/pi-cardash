@@ -21,7 +21,7 @@ from pygame.locals import MOUSEBUTTONUP
 import gui
 import carstat
 import dashcam
-#TODO: import gps
+import gps
 
 ### Initialize pygame
 pygame.init()
@@ -71,7 +71,13 @@ car.start()
 
 
 ### GPS Tab
-
+min_long = -111.9087
+max_long = -111.8209
+max_lat = 33.2752
+min_lat = 33.2352
+map_height = 560
+map_width = 1024
+Map = gps.Map(image='Map.png',max_lat=33.2752,min_lat=33.2352,max_long=-111.8209,min_long=-111.9087)
 
 ### Dashcam Tab
 
@@ -93,9 +99,11 @@ quit_button = gui.TouchButton("Quit")
 # Animation Loop #
 ##################
 
-count = 0
+recording = False
 start_time = time.time()
 currentTab = status_tab
+lon = 0.0
+lat = 0.0
 
 try:
         while time.time() - start_time < timeout:
@@ -135,10 +143,10 @@ try:
                                     exit()
 
                 # Update values
-                rpm_gauge.update(count)
-                coolant_temp_gauge.update(int(count/50))
-                maf_gauge.update(count)
-                count+=1
+                rpm_gauge.update(car.query(carstat.commands.RPM))
+                coolant_temp_gauge.update(car.query(carstat.commands.COOLANT_TEMP))
+                maf_gauge.update(car.query(carstat.commands.MAF))
+                lat, lon = gps.get_lat_lon()
 
                 ### Redraw screen
                 # Black out the screen
@@ -156,7 +164,10 @@ try:
 
                 # Draw GPS tab
                 elif currentTab is gps_tab:
-                        pass
+                        Map.draw(screen,0,40)
+                        y=(map_height/(max_lat-min_lat))*(max_lat-lat) + 40
+                        x=(map_width/(min_long-max_long))*(min_long - lon)
+                        pygame.draw.circle(screen, gui.colors.RED, (int(x),int(y)),5)
 
                 # Draw Dashcam tab
                 elif currentTab is dashcam_tab:
