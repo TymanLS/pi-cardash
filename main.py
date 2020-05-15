@@ -6,8 +6,6 @@
 # Depends on: gui module
 ############################################################
 
-timeout = 60
-
 ############################
 # Setup and Initialization #
 ############################
@@ -26,7 +24,7 @@ import gps
 ### Initialize pygame
 pygame.init()
 screen = pygame.display.set_mode(gui.SCREEN_SIZE)
-#pygame.mouse.set_visible(False)
+pygame.mouse.set_visible(False)
 
 
 
@@ -58,7 +56,7 @@ menuButtons = [status_tab, gps_tab, dashcam_tab]
 # Gauges
 rpm_gauge = gui.RpmGauge(redline=6000)
 coolant_temp_gauge = gui.BarGauge("Coolant Temperature", unit="degC", val_range=(-10, 120), safe_range=(10,85))
-maf_gauge = gui.BarGauge("Mass Airflow Intake", unit="g/s", val_range=(0,20), safe_range=(0, 10))
+maf_gauge = gui.BarGauge("Mass Airflow Intake", unit="g/s", val_range=(0,30), safe_range=(0, 20))
 statusGauges = [rpm_gauge, coolant_temp_gauge, maf_gauge]
 
 # Gauge Coordinates
@@ -83,15 +81,11 @@ Map = gps.Map(image='Map.png',max_lat=33.2752,min_lat=33.2352,max_long=-111.8209
 
 # Camera
 cam = dashcam.Dashcam()
-camCoords = (100, 220)
+camCoords = (20, 40)
 record_button = gui.TouchButton("Record", width=160, height=40, color=gui.colors.GREEN)
 stop_button = gui.TouchButton("Stop", width=160, height=40, color = gui.colors.RED)
 camButtons = [record_button, stop_button]
 camButtonCoords= [(920, 80),(920, 160)]
-
-
-### Quit Button
-quit_button = gui.TouchButton("Quit")
 
 
 
@@ -100,90 +94,86 @@ quit_button = gui.TouchButton("Quit")
 ##################
 
 recording = False
-start_time = time.time()
 currentTab = status_tab
 lon = 0.0
 lat = 0.0
 
 try:
-        while time.time() - start_time < timeout:
-                time.sleep(0.002)
+	while True:
+		time.sleep(0.002)
 
-                # Handle events
-                for event in pygame.event.get():
-                        if(event.type is MOUSEBUTTONUP):
-                                pos = pygame.mouse.get_pos()
-                                for tab in menuButtons:
-                                        if tab.pressed(pos):
-                                                print(f"Switching to {tab.text} tab")
-                                                currentTab = tab
-                                                if tab is dashcam_tab:
-                                                    recording = False
-                                                    cam.show(camCoords[0], camCoords[1])
-                                                    print("In the camera if statement")
-                                                else:
-                                                    cam.hide()
-                                for button in camButtons:
-                                        if button.pressed(pos):
-                                            print(f"{button.text} pressed")
-                                            if button is record_button:
-                                                recording = True
-                                                print("recording started")
-                                                cam.record()
-                                                pygame.draw.circle(screen, gui.colors.RED,(920,80),20)
-                                            elif button is stop_button:
-                                                cam.stop()
-                                                recording = False
-                                                print("recording var= ",recording)
-                                if quit_button.pressed(pos):
-                                    if recording:
-                                        cam.stop()
-                                    car.stop()
-                                    pygame.quit()
-                                    exit()
+		### Handle events
+		for event in pygame.event.get():
+			if(event.type is MOUSEBUTTONUP):
+				pos = pygame.mouse.get_pos()
 
-                # Update values
-                rpm_gauge.update(car.query(carstat.commands.RPM))
-                coolant_temp_gauge.update(car.query(carstat.commands.COOLANT_TEMP))
-                maf_gauge.update(car.query(carstat.commands.MAF))
-                lat, lon = gps.get_lat_lon()
+				# Tab buttons
+				for tab in menuButtons:
+					if tab.pressed(pos):
+						print(f"Switching to {tab.text} tab")
+						currentTab = tab
+						if tab is dashcam_tab:
+							cam.show(camCoords[0], camCoords[1])
+						else:
+							cam.hide()
 
-                ### Redraw screen
-                # Black out the screen
-                screen.fill(gui.colors.BLACK)
+				# Dashcam buttons
+				for button in camButtons:
+					if currentTab is dashcam_tab:
+						if button.pressed(pos):
+							print(f"{button.text} pressed")
+							if button is record_button and not recording:
+								recording = True
+								cam.record()
+							elif button is stop_button and recording:
+								cam.stop()
+								recording = False
+
+
+		### Update values
+		rpm_gauge.update(car.query(carstat.commands.RPM))
+		coolant_temp_gauge.update(car.query(carstat.commands.COOLANT_TEMP))
+		maf_gauge.update(round(car.query(carstat.commands.MAF), 2))
+		lat, lon = gps.get_lat_lon()
+		now = gps.get_time()
+		clock_tab.update_text(f"{now.date().isoformat()}  {now.time().isoformat()}")
+
+
+		### Redraw screen
+		# Black out the screen
+		screen.fill(gui.colors.BLACK)
                 
-                # Draw menu bar
-                pygame.draw.rect(screen, gui.colors.GRAY, menuRect)
-                for tab in range(0, len(menuTabs)):
-                        menuTabs[tab].draw(screen, menuCoords[tab][0], menuCoords[tab][1], centered=False)
+		# Draw menu bar
+		pygame.draw.rect(screen, gui.colors.GRAY, menuRect)
+		for tab in range(0, len(menuTabs)):
+			menuTabs[tab].draw(screen, menuCoords[tab][0], menuCoords[tab][1], centered=False)
 
-                # Draw Status tab
-                if currentTab is status_tab:
-                        for gauge in range(0, len(statusGauges)):
-                                statusGauges[gauge].draw(screen, statusCoords[gauge][0], statusCoords[gauge][1])
+		# Draw Status tab
+		if currentTab is status_tab:
+			for gauge in range(0, len(statusGauges)):
+				statusGauges[gauge].draw(screen, statusCoords[gauge][0], statusCoords[gauge][1])
 
-                # Draw GPS tab
-                elif currentTab is gps_tab:
-                        Map.draw(screen,0,40)
-                        y=(map_height/(max_lat-min_lat))*(max_lat-lat) + 40
-                        x=(map_width/(min_long-max_long))*(min_long - lon)
-                        pygame.draw.circle(screen, gui.colors.RED, (int(x),int(y)),5)
+		# Draw GPS tab
+		elif currentTab is gps_tab:
+			Map.draw(screen,0,40)
+			x=(map_width/(min_long-max_long))*(min_long - lon)
+			y=(map_height/(max_lat-min_lat))*(max_lat-lat) + 40
+			pygame.draw.circle(screen, gui.colors.RED, (int(x),int(y)),5)
 
-                # Draw Dashcam tab
-                elif currentTab is dashcam_tab:
-                    if not recording:
-                        camButtons[0].draw(screen, camButtonCoords[0][0], camButtonCoords[0][1]) 
-                    elif recording:
-                        camButtons[1].draw(screen, camButtonCoords[1][0], camButtonCoords[1][1]) 
-                        pygame.draw.circle(screen, gui.colors.RED,(920,80),20)
+		# Draw Dashcam tab
+		elif currentTab is dashcam_tab:
+			if not recording:
+				camButtons[0].draw(screen, camButtonCoords[0][0], camButtonCoords[0][1]) 
+			elif recording:
+				camButtons[1].draw(screen, camButtonCoords[1][0], camButtonCoords[1][1]) 
+				pygame.draw.circle(screen, gui.colors.RED,(920,80),20)
 
-                # Draw quit button
-                quit_button.draw(screen, 512, 500)
-
-                # Update display
-                pygame.display.flip()
+		# Update display
+		pygame.display.flip()
                 
 except KeyboardInterrupt:
+        if recording:
+            cam.stop()
         car.stop()
         pygame.quit()
         exit()
