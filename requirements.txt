@@ -1,0 +1,5 @@
+obd
+pygame
+gpsd
+picamera
+
